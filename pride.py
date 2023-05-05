@@ -38,27 +38,40 @@ def get_pride_studies():
         if not "babraham" in " ".join(study["affiliations"]).lower():
             print("No Babraham affiliation for "+study["accession"])
 
-        doi = ""
-        if study["references"]:
-            doi = get_doi(study["accession"])
+        # There are some pieces of information we need a separate query for
+        doi,submitters = get_doi_submitters(study["accession"])
 
         kept_studies.append({
+            "database": "PRIDE",
             "accession": study["accession"],
-            "title": study["title"],
-            "description": study["projectDescription"],
+            "link": f"https://www.ebi.ac.uk/pride/archive/projects/{study['accession']}",
             "date": study["publicationDate"],
-            "doi": doi
+            "submitters": submitters,
+            "publication": doi,
+            "title": study["title"].replace("\n"," "),
+            "description": study["projectDescription"].replace("\n","\\n")
         })
 
     return kept_studies
 
 
-def get_doi(accession):
-    # There is a separate API to pull the full details of a study to get the doi
+def get_doi_submitters(accession):
+    # There is a separate API to pull the full details of a study to get the doi and submitters
 
     data = requests.get(f"https://www.ebi.ac.uk/pride/ws/archive/v2/projects/{accession}").json()
 
-    return data["references"][0]["doi"]
+    doi = ""
+    if data["references"]:
+        doi = data["references"][0]["doi"]
+
+    submitters = []
+    for submitter in data["submitters"]:
+        submitters.append(submitter["name"])
+
+    submitters = ", ".join(submitters)
+
+    return doi,submitters
+
 
 
 if __name__ == "__main__":
