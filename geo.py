@@ -10,7 +10,9 @@ def query_ena():
     # data is mirrored over to ENA we can do the query on ENA and then take the
     # ids from that back to get the GEO ids
 
-    data = requests.get("https://www.ebi.ac.uk/ena/portal/api/search?query=center_name=%22babraham%22&result=study&fields=study_accession,secondary_study_accession,study_title,study_description,center_name,first_public,geo_accession,scientific_name&limit=0&download=true&format=json").json()
+    data = requests.get("https://www.ebi.ac.uk/ena/portal/api/search?query=center_name=%22babraham%22&result=study&fields=study_accession,secondary_study_accession,study_title,study_description,center_name,first_public,geo_accession,scientific_name&limit=0&download=true&format=json")
+    data.encoding = data.apparent_encoding
+    data = data.json()
 
     studies = []
 
@@ -18,26 +20,26 @@ def query_ena():
 
         print("Processing "+entry["study_accession"])
 
-
         # Some of these are super-series - which we'll ignore
-        if entry["description"].startswith("This SuperSeries"):
+        if entry["study_description"].startswith("This SuperSeries"):
             continue
 
         database = ""
         accession = ""
         link = ""
         submitters = ""
+        publication = ""
 
         # We try databases in order of preference
         if "geo_accession" in entry and entry["geo_accession"]:
             database = "GEO"
             accession = entry["geo_accession"]
             link = f"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={accession}"
-            submitters = get_geo_submitters(accession)
+            submitters, publication = get_geo_info(accession)
 
         elif entry["secondary_study_accession"].startswith("ERP"):
             database = "ArrayExpress"
-            accession, submitters = get_array_express_id(entry['secondary_study_accession'])
+            accession, submitters, publication = get_array_express_info(entry['secondary_study_accession'])
             link = f"https://www.ebi.ac.uk/biostudies/arrayexpress/studies/{accession}"
 
             if not accession:
@@ -53,38 +55,46 @@ def query_ena():
             "link": link,
             "date": entry["first_public"],
             "submitters": submitters,
-            "publication": "",
+            "publication": publication,
             "title": entry['study_title'],
             "description": entry["study_description"]
         })
 
     return studies
 
-def get_geo_submitters(accession):
-    data = requests.get(f"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={accession}&form=text&view=quick").text
+def get_geo_info(accession):
+    data = requests.get(f"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={accession}&form=text&view=quick")
+    data.encoding = data.apparent_encoding
+    data = data.text
 
     submitters = []
+    pmid = ""
 
     for line in data.split("\n"):
         if line.startswith("!Series_contributor"):
             submitters.append(line.split("=")[1].strip().replace(","," "))
 
+        elif line.startswith("!Series_pubmed_id"):
+            pmid = line.split("=")[1].strip()
+
     # Remove double spaces
     submitters = [x.replace("  "," ") for x in submitters]
 
-    return(", ".join(submitters))
+    return ", ".join(submitters),pmid
 
 
-def get_array_express_id(ena_accession):
+def get_array_express_info(ena_accession):
     data = requests.get(f"https://www.ebi.ac.uk/biostudies/api/v1/search?query={ena_accession}").json()
     
     if not "hits" in data:
-        return "",""
+        return "","",""
     
     if not data["hits"]:
-        return "",""
+        return "","",""
+    
+    publication = ""
 
-    return data["hits"][0]["accession"], data["hits"][0]["author"]
+    return data["hits"][0]["accession"], data["hits"][0]["author"], publication
 
 
 def write_results(studies, file):
