@@ -92,9 +92,27 @@ def get_array_express_info(ena_accession):
     if not data["hits"]:
         return "","",""
     
+
+    accession = data["hits"][0]["accession"]
+    submitters = data["hits"][0]["author"]
+
+    # We now need to find a publication.  This needs the full array express document
+    fulldata = requests.get(f"https://www.ebi.ac.uk/biostudies/files/{accession}/{accession}.json")
+    fulldata.encoding = fulldata.apparent_encoding
+    fulldata = fulldata.json()
+
     publication = ""
 
-    return data["hits"][0]["accession"], data["hits"][0]["author"], publication
+    # If there's a publication it will be in data["subsections"][x]["type"] == "publication"
+    # the PMID is data["subsections"][x]["accno"]
+
+    for section in fulldata["section"]["subsections"]:
+        if "type" in section and section["type"].lower() == "publication":
+            publication = section["accno"]
+            break
+
+
+    return accession, submitters, publication
 
 
 def write_results(studies, file):
