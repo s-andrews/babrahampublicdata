@@ -2,7 +2,7 @@ import requests
 
 def main():
     studies = query_ena()
-    write_results(studies,"all_studies.txt")
+    write_results(studies,"all_sequencing_studies.txt")
 
 
 def query_ena():
@@ -15,21 +15,79 @@ def query_ena():
     studies = []
 
     for entry in data:
-        studies.append({
-            "ena_accession":entry["study_accession"],
-            "geo_accession":entry["geo_accession"],
-            "secondary_accession":entry["secondary_study_accession"],
-            "title": entry['study_title'],
-            "description": entry["study_description"],
-            "date": entry["first_public"]
-        })
 
+        print("Processing "+entry["study_accession"])
+
+
+        # Some of these are super-series - which we'll ignore
+        if entry["description"].startswith("This SuperSeries"):
+            continue
+
+        database = ""
+        accession = ""
+        link = ""
+        submitters = ""
+
+        # We try databases in order of preference
+        if "geo_accession" in entry and entry["geo_accession"]:
+            database = "GEO"
+            accession = entry["geo_accession"]
+            link = f"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={accession}"
+            submitters = get_geo_submitters(accession)
+
+        elif entry["secondary_study_accession"].startswith("ERP"):
+            database = "ArrayExpress"
+            accession, submitters = get_array_express_id(entry['secondary_study_accession'])
+            link = f"https://www.ebi.ac.uk/biostudies/arrayexpress/studies/{accession}"
+
+            if not accession:
+                # If we don't find an array express ID then this is just an ENA/SRA
+                # submission
+                database = "ENA"
+                accession = entry["study_accession"]
+                link = f"https://www.ebi.ac.uk/ena/browser/view/{accession}"
+
+        studies.append({
+            "database": database,
+            "accession":accession,
+            "link": link,
+            "date": entry["first_public"],
+            "submitters": submitters,
+            "publication": "",
+            "title": entry['study_title'],
+            "description": entry["study_description"]
+        })
 
     return studies
 
+def get_geo_submitters(accession):
+    data = requests.get(f"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={accession}&form=text&view=quick").text
+
+    submitters = []
+
+    for line in data.split("\n"):
+        if line.startswith("!Series_contributor"):
+            submitters.append(line.split("=")[1].strip().replace(","," "))
+
+    # Remove double spaces
+    submitters = [x.replace("  "," ") for x in submitters]
+
+    return(", ".join(submitters))
+
+
+def get_array_express_id(ena_accession):
+    data = requests.get(f"https://www.ebi.ac.uk/biostudies/api/v1/search?query={ena_accession}").json()
+    
+    if not "hits" in data:
+        return "",""
+    
+    if not data["hits"]:
+        return "",""
+
+    return data["hits"][0]["accession"], data["hits"][0]["author"]
+
 
 def write_results(studies, file):
-    breakpoint()
     with open(file,"wt", encoding="utf8") as out:
         fields = list(studies[0].keys())
         print("\t".join(fields), file=out)
