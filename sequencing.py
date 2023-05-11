@@ -49,6 +49,10 @@ def query_ena():
                 accession = entry["study_accession"]
                 link = f"https://www.ebi.ac.uk/ena/browser/view/{accession}"
 
+        # Turn the pubmed id into a link (if there is one)
+        if publication:
+            publication = "https://pubmed.ncbi.nlm.nih.gov/"+publication
+
         studies.append({
             "database": database,
             "accession":accession,
@@ -108,8 +112,9 @@ def get_array_express_info(ena_accession):
 
     for section in fulldata["section"]["subsections"]:
         if "type" in section and section["type"].lower() == "publication":
-            publication = section["accno"]
-            break
+            if "accno" in section:
+                publication = section["accno"]
+                break
 
 
     return accession, submitters, publication
