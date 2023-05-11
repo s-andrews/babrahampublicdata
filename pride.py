@@ -41,6 +41,10 @@ def get_pride_studies():
         # There are some pieces of information we need a separate query for
         doi,submitters = get_doi_submitters(study["accession"])
 
+        # Turn the doi into a URL
+        if doi:
+            doi = "https://doi.org/"+doi
+
         kept_studies.append({
             "database": "PRIDE",
             "accession": study["accession"],
