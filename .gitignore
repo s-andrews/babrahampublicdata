@@ -1,3 +1,9 @@
+# Data files we create
+
+all_pride_studies.txt
+all_sequencing_studies.txt
+www/babraham_public_data.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
