@@ -1,6 +1,6 @@
 #!/bin/bash
 cd "$(dirname "$0")"
 
-python sequencing.py > update.log
-python pride.py >> update.log
-python create_json >> update.log
+python3 sequencing.py > update.log
+python3 pride.py >> update.log
+python3 create_json >> update.log
