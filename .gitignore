@@ -4,6 +4,9 @@ all_pride_studies.txt
 all_sequencing_studies.txt
 www/babraham_public_data.json
 
+# Log files
+update.log
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
