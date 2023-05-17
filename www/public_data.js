@@ -13,16 +13,23 @@ function populateTable(data) {
 
 
     for (let r=0; r< data.length; r++) {
+
+        let title = data[r]["title"]
+        if (data[r]["publication"]) {
+            title = "<a target=\"_external\" href=\""+data[r]["publication"]+"\">Publication</a> "+title
+        }
+
         table.row.add([
             data[r]["database"],
-            "<a href=\""+data[r]["link"]+"\">"+data[r]["accession"]+"</a>",
+            "<a href=\""+data[r]["link"]+"\" target=\"_external\">"+data[r]["accession"]+"</a>",
             data[r]["date"],
-            data[r]["title"],
+            title,
             data[r]["submitters"]
         ])
     }
 
-    table.columns.adjust().draw();
+    table.columns.adjust().order([2,'desc']).draw();
+    
 
 }
 
