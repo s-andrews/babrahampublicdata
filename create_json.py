@@ -18,10 +18,11 @@ def read_file(file,data):
     with open(file,"rt",encoding="utf8") as infh:
         headers = infh.readline().strip().split("\t")
         for line in infh:
-            sections = line.strip().split("\t")
+            sections = line.rstrip("\n").split("\t")
 
             # A kludge to work around breakage in the sequencing data
             if len(sections) != len(headers):
+                print(len(sections),len(headers))
                 continue
 
             if not sections:
