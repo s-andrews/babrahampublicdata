@@ -18,7 +18,10 @@ The main scripts of relevance are
 Collects all of the sequencing data and populates a file called ```all_sequencing_studies.txt```
 
 ```pride.py```
-Collects proteomics data from PRIDE and populates all_pride_studies.txt```
+Collects proteomics data from PRIDE and populates ```all_pride_studies.txt```
+
+```flowrepository.py```
+Collects flow data from FlowRepository and populates ```all_flowrepository_studies.txt```
 
 ```create_json.py```
 Reads the delimited output from the above scripts and combines them into a JSON file called ```babraham_public_data.json``` in the ```www``` folder
