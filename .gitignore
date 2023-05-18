@@ -2,6 +2,8 @@
 
 all_pride_studies.txt
 all_sequencing_studies.txt
+all_flowrepository_data.txt
+flowrepository_rejects.txt
 www/babraham_public_data.json
 
 # Log files
