@@ -2,7 +2,7 @@ import json
 
 def main():
     all_data = []
-    data_files = ["all_pride_studies.txt","all_sequencing_studies.txt"]
+    data_files = ["all_pride_studies.txt","all_sequencing_studies.txt","all_flowrepository_studies.txt"]
 
     for file in data_files:
         read_file(file,all_data)
