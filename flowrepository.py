@@ -10,7 +10,7 @@ def main():
     already_rejected_ids = load_rejected_ids(reject_id_file)
     ids = get_all_projects()
 
-    with open("all_flowrepository_data.txt","wt", encoding="utf8") as out:
+    with open("all_flowrepository_studies.txt","wt", encoding="utf8") as out:
         printed_header = False
         with open(reject_id_file,"at", encoding="utf8") as rejects:
             for id in ids:
