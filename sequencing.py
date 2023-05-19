@@ -48,6 +48,9 @@ def query_ena():
                 database = "ENA"
                 accession = entry["study_accession"]
                 link = f"https://www.ebi.ac.uk/ena/browser/view/{accession}"
+        else:
+            print(f"Skipping {entry['study_accession']} as it's not GEO or Array Express")
+            continue
 
         # Turn the pubmed id into a link (if there is one)
         if publication:
