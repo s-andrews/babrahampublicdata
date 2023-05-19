@@ -79,9 +79,7 @@ def parse_id(id):
             "date": date,
             "submitters": names,
             "publication": publication,
-            "title": parser.values_to_collect["Experiment name"],
-            "description": ""
-
+            "title": parser.values_to_collect["Experiment name"]
     }
     return values_to_return
 

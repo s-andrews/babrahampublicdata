@@ -52,8 +52,7 @@ def get_pride_studies():
             "date": study["publicationDate"],
             "submitters": submitters,
             "publication": doi,
-            "title": study["title"].replace("\n"," "),
-            "description": study["projectDescription"].replace("\n","\\n")
+            "title": study["title"].replace("\n"," ")
         })
 
     return kept_studies

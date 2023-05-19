@@ -60,8 +60,7 @@ def query_ena():
             "date": entry["first_public"],
             "submitters": submitters,
             "publication": publication,
-            "title": entry['study_title'],
-            "description": entry["study_description"]
+            "title": entry['study_title']
         })
 
     return studies
