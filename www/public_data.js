@@ -13,7 +13,7 @@ function populateTable(data) {
     console.log(data)
     d = data
 
-    let table = new DataTable("#publicdata")
+    let table = new DataTable("#publicdata",{"search":{"regex":true}})
 
 
     for (let r=0; r< data.length; r++) {
