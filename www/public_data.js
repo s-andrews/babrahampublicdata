@@ -1,4 +1,8 @@
 $( document ).ready(function() {
+    $.ajaxSetup({
+        scriptCharset: "utf-8",
+        contentType: "application/json; charset=utf-8"
+    });
     $.getJSON(
         "babraham_public_data.json",
         populateTable
