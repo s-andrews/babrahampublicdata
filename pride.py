@@ -31,7 +31,7 @@ def get_pride_studies():
     studies = requests.get(query_url).json()
 
     kept_studies = []
-    for study in studies["_embedded"]["compactprojects"]:
+    for study in studies:
 
         # We just searched on a keyword so we might not actually have a Babraham affiliation
         # (though Babraham is a pretty specific search term)
