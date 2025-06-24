@@ -1,6 +1,8 @@
 import requests
 
 def main():
+    # This accession broke things before.
+    # get_array_express_info("ERP000570")
     studies = query_ena()
     write_results(studies,"all_sequencing_studies.txt")
 
@@ -104,19 +106,26 @@ def get_array_express_info(ena_accession):
 
     # We now need to find a publication.  This needs the full array express document
     fulldata = requests.get(f"https://www.ebi.ac.uk/biostudies/files/{accession}/{accession}.json")
-    fulldata.encoding = fulldata.apparent_encoding
-    fulldata = fulldata.json()
 
     publication = ""
 
-    # If there's a publication it will be in data["subsections"][x]["type"] == "publication"
-    # the PMID is data["subsections"][x]["accno"]
+    # Sometimes this doesn't work and we get nothing back from the API.  The JSON parser
+    # can't deal with an empty document so we need to check it.
 
-    for section in fulldata["section"]["subsections"]:
-        if "type" in section and section["type"].lower() == "publication":
-            if "accno" in section:
-                publication = section["accno"]
-                break
+    if fulldata.content:
+
+        fulldata.encoding = fulldata.apparent_encoding
+        fulldata = fulldata.json()
+
+
+        # If there's a publication it will be in data["subsections"][x]["type"] == "publication"
+        # the PMID is data["subsections"][x]["accno"]
+
+        for section in fulldata["section"]["subsections"]:
+            if "type" in section and section["type"].lower() == "publication":
+                if "accno" in section:
+                    publication = section["accno"]
+                    break
 
 
     return accession, submitters, publication
