@@ -1,8 +1,13 @@
 import requests
+import gzip
+import io
 
 def main():
     # This accession broke things before.
     # get_array_express_info("ERP000570")
+    # Now we're breaking with 
+    # get_array_express_info("ERP000689")
+
     studies = query_ena()
     write_results(studies,"all_sequencing_studies.txt")
 
@@ -71,24 +76,56 @@ def query_ena():
     return studies
 
 def get_geo_info(accession):
-    data = requests.get(f"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={accession}&form=text&view=quick")
-    data.encoding = data.apparent_encoding
-    data = data.text
 
-    submitters = []
-    pmid = ""
+    accession = accession.strip().upper()
 
-    for line in data.split("\n"):
-        if line.startswith("!Series_contributor"):
-            submitters.append(line.split("=")[1].strip().replace(","," "))
+    group = accession[:-3] + "nnn"
 
-        elif line.startswith("!Series_pubmed_id"):
-            pmid = line.split("=")[1].strip()
+    url = (
+        f"https://ftp.ncbi.nlm.nih.gov/geo/series/"
+        f"{group}/{accession}/soft/{accession}_family.soft.gz"
+    )
 
-    # Remove double spaces
-    submitters = [x.replace("  "," ") for x in submitters]
+    authors = []
+    pmids = []
 
-    return ", ".join(submitters),pmid
+    with requests.get(url, stream=True, timeout=30) as response:
+        response.raise_for_status()
+
+        with gzip.GzipFile(fileobj=response.raw) as gz:
+            with io.TextIOWrapper(gz, encoding="utf-8", errors="replace") as text:
+
+                in_series = False
+
+                for line in text:
+                    line = line.strip()
+
+                    if line.startswith("^"):
+                        if in_series:
+                            break
+                        in_series = line == f"^SERIES = {accession}"
+                        continue
+
+                    if not in_series:
+                        continue
+
+                    if line.startswith("!Series_contributor ="):
+                        name = line.split("=", 1)[1].strip()
+                        name = " ".join(
+                            p.strip() for p in name.split(",")
+                            if p.strip()
+                        )
+                        authors.append(name)
+
+                    elif line.startswith("!Series_pubmed_id ="):
+                        pmid = line.split("=", 1)[1].strip()
+                        if pmid:
+                            pmids.append(pmid)
+
+    return (
+        ", ".join(dict.fromkeys(authors)),
+        ", ".join(dict.fromkeys(pmids)) or ""
+    )
 
 
 def get_array_express_info(ena_accession):
@@ -111,10 +148,13 @@ def get_array_express_info(ena_accession):
 
     # Sometimes this doesn't work and we get nothing back from the API.  The JSON parser
     # can't deal with an empty document so we need to check it.
+    #
+    # We can also get an HTML error page back, which isn't helpful
 
-    if fulldata.content:
+    if fulldata.content and not  "<html" in fulldata.content.decode(fulldata.apparent_encoding).strip()[1:100]:
 
-        fulldata.encoding = fulldata.apparent_encoding
+        fulldata.encoding = fulldata.apparent_encoding        
+
         fulldata = fulldata.json()
 
 
